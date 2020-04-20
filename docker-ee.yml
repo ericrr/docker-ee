@@ -1,0 +1,93 @@
+---
+- name: Install and Configure Docker Enterprise
+  hosts: localhost
+  become: yes
+  become_user: root
+
+
+  vars:
+   user: ubuntu
+   default_kubernetes_cni_weavenet_manifestUrl: "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+   
+   # Expira em 21/05/2020
+   DOCKER_EE_URL: "https://storebits.docker.com/ee/trial/sub-2d0374b1-33a3-47ab-b042-014b225f596a" 
+
+   # Docker Version  
+   DOCKER_EE_VERSION: "19.03"
+
+  tasks:
+  - name: Install packages that allow apt to be used over HTTPS
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+
+  - name: PG key using your customer Docker Engine - Enterprise repository URL
+    command: curl -fsSL "{{ DOCKER_EE_URL}/ubuntu/gpg }}" | sudo apt-key add -
+
+#  - name: Add an apt signing key for Docker
+#    apt_key:
+#      url: https://download.docker.com/linux/ubuntu/gpg
+#      state: present
+
+  - name: Add apt repository for stable version
+    apt_repository:
+      repo: deb [arch=$(dpkg --print-architecture)] {{ DOCKER_EE_URL}} /ubuntu $(lsb_release -cs) stable-{{ DOCKER_EE_VERSION }}
+      state: present
+
+  - name: Install docker and its dependecies
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - docker-ee 
+      - docker-ee-cli 
+      - containerd.io
+    notify:
+      - docker status
+
+  - name: Add ubuntu user to docker group
+    user:
+      name: ubuntu
+      group: docker
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  - name:  Enterprise instead of always using the latest
+    command: apt-cache madison docker-ee
+    register: docker_madison
+
+#  - name: enabled, and are specific to your version of Ubuntu
+#    apt:
+#      name: "{{ packages }}"
+#      state: present
+#      update_cache: yes
+#    vars:
+#      packages:
+#        - kubelet
+#        - kubeadm
+#        - kubectl
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started
