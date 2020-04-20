@@ -16,6 +16,15 @@
    DOCKER_EE_VERSION: "19.03"
 
   tasks:
+
+  - name: Get Architecture
+    command: dpkg --print-architecture
+    register: get_arch
+
+  - name: Get Release
+    command: lsb_release -cs
+    register: get_release
+
   - name: Install packages that allow apt to be used over HTTPS
     apt:
       name: "{{ packages }}"
@@ -29,17 +38,14 @@
       - gnupg-agent
       - software-properties-common
 
-  - name: PG key using your customer Docker Engine - Enterprise repository URL
-    command: curl -fsSL "{{ DOCKER_EE_URL}/ubuntu/gpg }}" | sudo apt-key add -
-
-#  - name: Add an apt signing key for Docker
-#    apt_key:
-#      url: https://download.docker.com/linux/ubuntu/gpg
-#      state: present
+  - name: Add an apt signing key for Docker
+    apt_key:
+      url: "{{ DOCKER_EE_URL }}/ubuntu/gpg"
+      state: present
 
   - name: Add apt repository for stable version
     apt_repository:
-      repo: deb [arch=$(dpkg --print-architecture)] {{ DOCKER_EE_URL}} /ubuntu $(lsb_release -cs) stable-{{ DOCKER_EE_VERSION }}
+      repo: deb [arch={{ get_arch.stdout_lines[0] }}] {{ DOCKER_EE_URL}}/ubuntu {{ get_release.stdout_lines[0] }} stable-{{ DOCKER_EE_VERSION }}
       state: present
 
   - name: Install docker and its dependecies
