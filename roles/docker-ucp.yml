@@ -1,0 +1,20 @@
+---
+- name: Install and Configure Docker Swarm
+  hosts: localhost
+  become: yes
+  become_user: root
+
+
+  vars:
+
+  tasks:
+
+  - name: Get IP Master
+    command: curl http://169.254.169.254/latest/meta-data/local-ipv4
+    register: get_ip
+
+  - name: Create Docker UCP
+    command:  docker container run --rm -it --name ucp -v /var/run/docker.sock:/var/run/docker.sock  docker/ucp:3.2.6 install --host-address {{ get_ip.stdout_lines[0] }}
+
+  - name: Create Docker DTR
+    command:  docker container run -it --rm docker/dtr:2.7.6 install --ucp-node {{ get_ip.stdout_lines[0] }} --ucp-insecure-tls

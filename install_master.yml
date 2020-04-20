@@ -1,0 +1,5 @@
+---
+# tasks file for join-workers
+- include: roles/docker-ee.yml
+- include: roles/docker-swarm.yml
+- include: roles/docker-ucp.yml

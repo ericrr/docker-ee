@@ -1,0 +1,44 @@
+---
+- name: Install and Configure Docker Swarm
+  hosts: localhost
+  become: yes
+  become_user: root
+
+  vars:
+
+  tasks:
+
+  - name: Get IP Master
+    command: curl http://169.254.169.254/latest/meta-data/local-ipv4
+    register: get_ip
+
+  - name: Get Release
+    command: lsb_release -cs
+    register: get_release
+
+
+  - name: INIT Docker Swarm
+    become: yes
+    become_user: root
+    shell: docker swarm init --advertise-addr {{ get_ip.stdout_lines[0] }} >> /home/ubuntu/swarm.txt
+    args:
+      chdir: $HOME
+      creates: swarm.txt
+    ignore_errors: true
+
+  - name: Generate join command workers
+    command: cat swarm.txt |grep "join --token"
+    register: join_worker
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_worker.stdout_lines[0] }}" dest="/home/ubuntu/join-master.sh"
+
+  - name: Delete file S3
+    command: aws s3 rm s3://swarm-docker-ee/join-master.sh
+    ignore_errors: true
+
+  - name: "copy to S3 bucket"
+    command: aws s3 cp /home/ubuntu/join-master.sh  s3://swarm-docker-ee
+
+
+    

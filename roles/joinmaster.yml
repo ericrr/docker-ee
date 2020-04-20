@@ -1,0 +1,12 @@
+---
+- name: Copy to S3 join-cluster
+  hosts: localhost
+
+  tasks:
+
+  - name: "copy to S3 bucket"
+    command: aws s3 cp s3://swarm-docker-ee/join-master.sh  /home/ubuntu/join-node.sh
+
+  - name: Add Node Kubernetes
+    shell: "sh /home/ubuntu/join-node.sh  >> /home/ubuntu/join-node.txt"
+    
