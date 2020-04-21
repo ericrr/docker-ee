@@ -14,7 +14,7 @@
     register: get_ip
 
   - name: Create Docker UCP
-    command:  docker container run --rm -it --name ucp -v /var/run/docker.sock:/var/run/docker.sock  docker/ucp:3.2.6 install --host-address {{ get_ip.stdout_lines[0] }}
+    command:  docker container run --rm -it --name ucp -v /var/run/docker.sock:/var/run/docker.sock  docker/ucp:3.2.6 install --host-address {{ get_ip.stdout_lines[0] }} --admin-password algar  --admin-username Algar@2020  --force-minimums
 
   - name: Create Docker DTR
     command:  docker container run -it --rm docker/dtr:2.7.6 install --ucp-node {{ get_ip.stdout_lines[0] }} --ucp-insecure-tls

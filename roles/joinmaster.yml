@@ -2,7 +2,30 @@
 - name: Copy to S3 join-cluster
   hosts: localhost
 
+
+  vars:
+
+  worker01: swarm-worker-01.lab
+  master01: swarm-master-01.lab
+  user: ubuntu
+  pathfile: /home/ubuntu
+  bucketname: swarm-docker-ee
+
   tasks:
+
+  - name: "copy to S3 Master01"
+    command: aws s3 cp s3://{{ bucketname }}/{{ master01 }}.txt  {{ pathfile }}/{{ master01 }}.txt   
+
+  - name: Update IP Master01
+    command: awk '{print $1}' {{ pathfile }}/{{ master01 }}.txt
+    register: ip_master1
+
+  - name: Add IP address of all hosts to all hosts
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ ip_master1.stdout_lines[0] }} {{ master01 }}"    
 
   - name: "copy to S3 bucket"
     command: aws s3 cp s3://swarm-docker-ee/join-master.sh  /home/ubuntu/join-node.sh
