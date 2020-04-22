@@ -6,15 +6,37 @@
 
 
   vars:
+    worker01: swarm-worker-01.lab
+    master01: swarm-master-01.lab
+    user: ubuntu
+    pathfile: /home/ubuntu
+    bucketname: swarm-docker-ee
 
   tasks:
+
+  - name: "copy to S3 Worker01"
+    command: aws s3 cp s3://{{ bucketname }}/{{ worker01 }}.txt  {{ pathfile }}/{{ worker01 }}.txt   
+    ignore_errors: true 
+
+  - name: Update IP Worker01
+    command: awk '{print $1}' {{ pathfile }}/{{ worker01 }}.txt
+    register: ip_worker1
+    ignore_errors: true 
+
+  - name: Add IP address of all hosts to all hosts
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ ip_worker1.stdout_lines[0] }} {{ worker01 }}"
+    ignore_errors: true 
 
   - name: Get IP Master
     command: curl http://169.254.169.254/latest/meta-data/local-ipv4
     register: get_ip
 
   - name: Create Docker UCP
-    command:  docker container run --rm -it --name ucp -v /var/run/docker.sock:/var/run/docker.sock  docker/ucp:3.2.6 install --host-address {{ get_ip.stdout_lines[0] }} --admin-password algar  --admin-username Algar@2020  --force-minimums
+    command:  docker container run --rm -i --name ucp -v /var/run/docker.sock:/var/run/docker.sock  docker/ucp:3.2.6 install --host-address {{ get_ip.stdout_lines[0] }} --admin-username algar  --admin-password Algar@2020  --force-minimums
 
-  - name: Create Docker DTR
-    command:  docker container run -it --rm docker/dtr:2.7.6 install --ucp-node {{ get_ip.stdout_lines[0] }} --ucp-insecure-tls
+#  - name: Create Docker DTR
+#    command:  docker container run -i --rm docker/dtr:2.7.6 install --ucp-node {{ get_ip.stdout_lines[0] }} --ucp-insecure-tls

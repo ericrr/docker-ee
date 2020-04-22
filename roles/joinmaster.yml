@@ -5,20 +5,22 @@
 
   vars:
 
-  worker01: swarm-worker-01.lab
-  master01: swarm-master-01.lab
-  user: ubuntu
-  pathfile: /home/ubuntu
-  bucketname: swarm-docker-ee
+    worker01: swarm-worker-01.lab
+    master01: swarm-master-01.lab
+    user: ubuntu
+    pathfile: /home/ubuntu
+    bucketname: swarm-docker-ee
 
   tasks:
 
   - name: "copy to S3 Master01"
     command: aws s3 cp s3://{{ bucketname }}/{{ master01 }}.txt  {{ pathfile }}/{{ master01 }}.txt   
+    ignore_errors: true 
 
   - name: Update IP Master01
     command: awk '{print $1}' {{ pathfile }}/{{ master01 }}.txt
     register: ip_master1
+    ignore_errors: true 
 
   - name: Add IP address of all hosts to all hosts
     become: yes
@@ -26,6 +28,15 @@
     lineinfile:
       path: /etc/hosts
       line: "{{ ip_master1.stdout_lines[0] }} {{ master01 }}"    
+    ignore_errors: true 
+
+
+  - name: Waits for port 8000 of any IP to close active connections, don't start checking for 10 seconds
+    wait_for:
+      host: "{{ ip_master1.stdout_lines[0] }}"
+      port: 2377
+      delay: 10
+      state: started
 
   - name: "copy to S3 bucket"
     command: aws s3 cp s3://swarm-docker-ee/join-master.sh  /home/ubuntu/join-node.sh

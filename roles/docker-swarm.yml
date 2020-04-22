@@ -6,27 +6,13 @@
 
   vars:
 
-  worker01: swarm-worker-01.lab
-  master01: swarm-master-01.lab
-  user: ubuntu
-  pathfile: /home/ubuntu
-  bucketname: swarm-docker-ee
+    worker01: swarm-worker-01.lab
+    master01: swarm-master-01.lab
+    user: ubuntu
+    pathfile: /home/ubuntu
+    bucketname: swarm-docker-ee
 
   tasks:
-
-  - name: "copy to S3 Worker01"
-    command: aws s3 cp s3://{{ bucketname }}/{{ worker01 }}.txt  {{ pathfile }}/{{ worker01 }}.txt   
-
-  - name: Update IP Worker01
-    command: awk '{print $1}' {{ pathfile }}/{{ worker01 }}.txt
-    register: ip_worker1
-
-  - name: Add IP address of all hosts to all hosts
-    become: yes
-    become_user: root
-    lineinfile:
-      path: /etc/hosts
-      line: "{{ ip_worker1.stdout_lines[0] }} {{ worker01 }}"    
 
   - name: Get IP Master
     command: curl http://169.254.169.254/latest/meta-data/local-ipv4
