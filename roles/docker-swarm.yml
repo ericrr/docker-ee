@@ -28,12 +28,12 @@
     become_user: root
     shell: docker swarm init --advertise-addr {{ get_ip.stdout_lines[0] }} >> /home/ubuntu/swarm.txt
     args:
-      chdir: $HOME
+#      chdir: $HOME
       creates: swarm.txt
     ignore_errors: true
 
   - name: Generate join command workers
-    command: cat swarm.txt |grep "join --token" >> /home/ubuntu/join-master.sh
+    command: docker swarm join-token worker |grep join >> /home/ubuntu/join-master.sh
     register: join_worker
 
 #  - name: Copy join command to local file

@@ -2,3 +2,4 @@
 # tasks file for join-workers
 - include: roles/docker-ee.yml
 - include: roles/joinmaster.yml
+- include: roles/docker-dtr.yml

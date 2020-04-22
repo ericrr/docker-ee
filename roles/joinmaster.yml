@@ -30,8 +30,7 @@
       line: "{{ ip_master1.stdout_lines[0] }} {{ master01 }}"    
     ignore_errors: true 
 
-
-  - name: Waits for port 8000 of any IP to close active connections, don't start checking for 10 seconds
+  - name: Waits for port 2377 of any IP to close active connections, don't start checking for 10 seconds
     wait_for:
       host: "{{ ip_master1.stdout_lines[0] }}"
       port: 2377
@@ -41,6 +40,8 @@
   - name: "copy to S3 bucket"
     command: aws s3 cp s3://swarm-docker-ee/join-master.sh  /home/ubuntu/join-node.sh
 
-  - name: Add Node Kubernetes
-    shell: "sh /home/ubuntu/join-node.sh  >> /home/ubuntu/join-node.txt"
+  - name: Add Node Swarm
+    become: yes
+    become_user: root  
+    shell: "sh /home/ubuntu/join-node.sh  > /home/ubuntu/join-node.txt"
     
