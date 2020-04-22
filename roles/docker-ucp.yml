@@ -7,6 +7,7 @@
 
   vars:
     worker01: swarm-worker-01.lab
+    worker02: swarm-worker-02.lab
     master01: swarm-master-01.lab
     user: ubuntu
     pathfile: /home/ubuntu
@@ -18,10 +19,19 @@
     command: aws s3 cp s3://{{ bucketname }}/{{ worker01 }}.txt  {{ pathfile }}/{{ worker01 }}.txt   
     ignore_errors: true 
 
+  - name: "copy to S3 Worker01"
+    command: aws s3 cp s3://{{ bucketname }}/{{ worker02 }}.txt  {{ pathfile }}/{{ worker02 }}.txt   
+    ignore_errors: true     
+
   - name: Update IP Worker01
     command: awk '{print $1}' {{ pathfile }}/{{ worker01 }}.txt
     register: ip_worker1
     ignore_errors: true 
+
+  - name: Update IP Worker02
+    command: awk '{print $1}' {{ pathfile }}/{{ worker02 }}.txt
+    register: ip_worker2
+    ignore_errors: true     
 
   - name: Add IP address of all hosts to all hosts
     become: yes
@@ -30,6 +40,14 @@
       path: /etc/hosts
       line: "{{ ip_worker1.stdout_lines[0] }} {{ worker01 }}"
     ignore_errors: true 
+
+  - name: Add IP address of all hosts to all hosts
+    become: yes
+    become_user: root
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ ip_worker2.stdout_lines[0] }} {{ worker02 }}"
+    ignore_errors: true     
 
   - name: Get IP Master
     command: curl http://169.254.169.254/latest/meta-data/local-ipv4
