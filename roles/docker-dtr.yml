@@ -6,6 +6,7 @@
   vars:
 
     worker01: swarm-worker-01.lab
+    worker02: swarm-worker-02.lab
     master01: swarm-master-01.lab
     user: ubuntu
     pathfile: /home/ubuntu
@@ -18,7 +19,7 @@
   - name: Update IP Master01
     command: awk '{print $1}' {{ pathfile }}/{{ master01 }}.txt
     register: ip_master1
-    ignore_errors: true 
+    ignore_errors: true
 
   - name: Waits for port 443 of any IP to close active connections, don't start checking for 10 seconds
     wait_for:
@@ -26,7 +27,7 @@
       port: 443
       delay: 10
       state: started
- 
+
   - name: Create Docker DTR
-    command:  docker run -it --rm docker/dtr install  --ucp-node swarm-worker-01.lab  --ucp-username {{ ucpuser }}  --ucp-password {{ ucppass }} --ucp-url https://{{ ip_master1.stdout_lins[0] }} --ucp-insecure-tls
-    when: (ansible_facts['hostname'] == "{{ worker01 }}")
+    command:  docker run -i --rm docker/dtr install  --ucp-node swarm-worker-01.lab  --ucp-username {{ ucpuser }}  --ucp-password {{ ucppass }} --ucp-url https://{{ ip_master1.stdout_lines[0] }} --ucp-insecure-tls
+    when: ansible_facts['nodename'] == "{{ worker01 }}"
