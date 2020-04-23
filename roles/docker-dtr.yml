@@ -29,5 +29,7 @@
       state: started
 
   - name: Create Docker DTR
+    become: yes
+    become_user: root
     command:  docker run -i --rm docker/dtr install  --ucp-node swarm-worker-01.lab  --ucp-username {{ ucpuser }}  --ucp-password {{ ucppass }} --ucp-url https://{{ ip_master1.stdout_lines[0] }} --ucp-insecure-tls
     when: ansible_facts['nodename'] == "{{ worker01 }}"
